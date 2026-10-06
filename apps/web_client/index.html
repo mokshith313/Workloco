@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WorkLoco | Hyperlocal & Nationwide Job Discovery & Direct-Connect Platform</title>
+  <meta name="description" content="WorkLoco connects job seekers and neighborhood employers across India with PostGIS proximity radar, hybrid search, 1-tap applications, and direct WhatsApp connect." />
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23D94A26'/><text y='.9em' font-size='75' x='15' fill='white'>W</text></svg>" />
+
+  <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <!-- Base URL for SPA Routing -->
+  <base href="/" />
+
+  <!-- App Stylesheet -->
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+  <!-- Top Sticky Navigation -->
+  <header class="header">
+    <div class="header-container">
+      <!-- Top-Left Brand Logo & Menu Drawer Trigger Container -->
+      <div class="header-brand-container">
+        <button type="button" class="logo-icon header-w-drawer-btn" id="header-w-drawer-toggle" onclick="toggleSidebarDrawer()" title="Open WorkLoco Menu" aria-label="Open Navigation Menu">
+          <span>W</span>
+        </button>
+        <div class="logo-group" id="brand-home-logo" role="button" tabindex="0" title="Reset filters & return to Home">
+          <div class="logo-text">
+            <h1>Work<span>Loco</span></h1>
+            <span class="badge-tagline">Hyperlocal Proximity Radar • Bharat</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Dynamic Location Selector + Live GPS -->
+        <div class="location-control-group">
+          <select id="city-quick-select" class="location-picker-btn">
+            <option value="Guntur">📍 Guntur</option>
+            <option value="Hyderabad">📍 Hyderabad</option>
+            <option value="Bangalore">📍 Bangalore</option>
+            <option value="Mumbai">📍 Mumbai</option>
+            <option value="Delhi">📍 Delhi</option>
+            <option value="custom">✍️ Other City / PIN...</option>
+          </select>
+          <input type="text" id="custom-city-input" class="custom-city-input" placeholder="Type city or PIN..." />
+          <button id="btn-live-gps" class="btn-gps-live" title="Fetch live GPS coordinates">
+            📍 Use Current Location
+          </button>
+        </div>
+
+        <!-- Role Switcher -->
+        <div class="view-mode-tabs">
+          <button id="role-seeker-btn" class="view-mode-btn active" data-i18n="find_jobs">
+            🔍 Seeker Radar
+          </button>
+          <button id="role-provider-btn" class="view-mode-btn" data-i18n="hire_talent">
+            💼 WorkLoco Pro (Hiring)
+          </button>
+        </div>
+
+        <!-- Quick Language Picker -->
+        <select id="header-language-select" class="app-language-select" title="Change Language" aria-label="Language">
+          <option value="en">🌐 EN</option>
+          <option value="te">తెలుగు (TE)</option>
+          <option value="hi">हिन्दी (HI)</option>
+          <option value="ta">தமிழ் (TA)</option>
+          <option value="kn">ಕನ್ನಡ (KN)</option>
+          <option value="mr">मराठी (MR)</option>
+        </select>
+
+        <!-- Notification Bell & Dropdown Container -->
+        <div style="position: relative;">
+          <button id="notif-bell-btn" class="notification-bell-btn" title="Notifications">
+            🔔
+            <span id="notif-count-badge" class="notif-badge">3</span>
+          </button>
+
+          <!-- Notification Feed Panel -->
+          <div id="notifications-panel" class="notifications-panel">
+            <div class="notif-header">
+              <span>🔔 Notifications</span>
+              <button id="btn-mark-all-read" style="background: none; border: none; font-size: 0.75rem; color: var(--primary); cursor: pointer; font-weight: 700;">
+                Mark all read
+              </button>
+            </div>
+            <div id="notifications-list" class="notif-list">
+              <!-- Dynamically rendered -->
+            </div>
+            <div class="notif-footer" id="notif-refresh-btn">
+              🔄 Check for new alerts
+            </div>
+          </div>
+        </div>
+
+        <!-- Header Founder / Admin Console Quick Access -->
+        <button id="header-admin-btn" class="header-admin-btn" style="display: none; background: rgba(217, 74, 38, 0.1); color: var(--primary); border: 1.5px solid var(--primary); padding: 0.45rem 0.85rem; border-radius: var(--radius-md); font-weight: 700; font-size: 0.82rem; cursor: pointer; align-items: center; gap: 0.4rem; transition: all 0.2s ease;">
+          <span>⚡</span> <span>Founder / Admin Console</span>
+        </button>
+
+        <!-- User Profile & Auth Trigger Button -->
+        <button id="header-user-btn" class="user-auth-btn">
+          <div class="user-avatar-pill" id="header-user-avatar">?</div>
+          <span id="header-user-label" data-i18n="sign_in">Sign In</span>
+        </button>
+
+        <!-- Post Job Header Action -->
+        <button id="header-post-job-btn" class="btn-post-job-cta">
+          <span>+</span> <span data-i18n="post_a_job">Post a Job</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Wrapper -->
+  <main class="main-wrapper">
+
+    <!-- VIEW 1: SEEKER DISCOVERY FEED & RADAR -->
+    <section id="seeker-discovery-view">
+      
+      <!-- Radar Hero Control Panel -->
+      <div class="radar-hero">
+        <div class="radar-header">
+          <div class="radar-headline">
+            <h2>
+              <span>🎯 Geospatial Proximity Radar</span>
+            </h2>
+            <p>Direct connect with verified local shops, studios, logistics hubs, and nationwide employers.</p>
+          </div>
+          <div id="spatial-latency-pill" class="spatial-stat-pill">
+            <span class="dot"></span>
+            <span>PostGIS Query: <strong>--</strong> | Ready</span>
+          </div>
+        </div>
+
+        <div class="radar-controls-grid">
+          <!-- Hybrid Search & Free-Text Tagging Box (F-01) -->
+          <div class="search-input-wrapper">
+            <div class="search-input-box">
+              <span>🔍</span>
+              <input type="text" id="job-search-input" placeholder='Search roles: "Video Editor", "Cook", "Electrician", or enter custom title...' autocomplete="off" />
+              <button id="job-search-btn" class="search-btn">
+                Scan Radar
+              </button>
+            </div>
+            <!-- Typeahead Dropdown -->
+            <div id="autocomplete-dropdown" class="autocomplete-dropdown"></div>
+          </div>
+
+          <!-- Radius Distance Slider (F-02) -->
+          <div class="radius-slider-box">
+            <div class="slider-label-row">
+              <span>Search Radius:</span>
+              <strong id="radius-display-value">10 km</strong>
+            </div>
+            <input type="range" id="radius-slider" class="radius-slider" min="1" max="100" value="10" step="1" />
+          </div>
+        </div>
+
+        <!-- Category Chips -->
+        <div class="category-chips-row" id="category-chips">
+          <button class="chip-btn active" data-category="all">✨ All Roles</button>
+          <button class="chip-btn" data-category="Creative & Media">🎬 Creative & Media</button>
+          <button class="chip-btn" data-category="Logistics & Delivery">🛵 Logistics & Delivery</button>
+          <button class="chip-btn" data-category="Hospitality & Food">🍳 Hospitality & Food</button>
+          <button class="chip-btn" data-category="Skilled Trades">⚡ Skilled Trades</button>
+          <button class="chip-btn" data-category="Manufacturing">⚙️ Manufacturing</button>
+          <button class="chip-btn" data-category="Finance & Accounts">📊 Finance & Accounts</button>
+        </div>
+      </div>
+
+      <!-- Split Layout: Leaflet Map + Job Feed -->
+      <div class="content-grid">
+        
+        <!-- Left: Interactive Spatial Radar Map -->
+        <div class="map-card-wrapper">
+          <div class="map-card-header">
+            <div class="map-card-title">
+              <span>🗺️ Live Proximity Radar</span>
+              <span class="map-badge-radius">Live PostGIS Geofence</span>
+            </div>
+            <span style="font-size: 0.78rem; color: #64748B;">Pins show verified openings</span>
+          </div>
+          <div id="leaflet-map"></div>
+        </div>
+
+        <!-- Right: Active Job Cards Feed -->
+        <div class="feed-column">
+          <div class="feed-header">
+            <div class="feed-title">
+              <h3>Nearby Openings <span id="nearby-count-badge" class="count-pill">-- jobs</span></h3>
+            </div>
+            <div class="sort-hint">
+              <span>📍 Sorted by closest GPS distance</span>
+            </div>
+          </div>
+
+          <div id="jobs-feed" class="jobs-feed-list">
+            <!-- Dynamic Job Cards Rendered Here -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- VIEW 2: EMPLOYER DASHBOARD ("WORKLOCO PRO") -->
+    <section id="employer-dashboard-view" class="dashboard-wrapper">
+      
+      <!-- Employer Metrics -->
+      <div class="employer-stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-label">Active Job Listings</div>
+          <div id="stat-active-jobs" class="stat-card-value">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Candidate Applications</div>
+          <div id="stat-total-applicants" class="stat-card-value">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Hired Candidates</div>
+          <div id="stat-total-hired" class="stat-card-value">--</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Avg Distance of Applicants</div>
+          <div class="stat-card-value" style="color: var(--primary);">2.4 km</div>
+        </div>
+      </div>
+
+      <!-- Active Listings Management Table -->
+      <div class="active-jobs-table-card">
+        <div class="table-header-bar">
+          <div>
+            <h3>Your Posted Jobs & Quota Management</h3>
+            <p style="font-size: 0.85rem; color: #64748B;">Redis BullMQ auto-expires posts when duration ends or quota is fulfilled.</p>
+          </div>
+          <button onclick="document.getElementById('post-job-modal').classList.add('open')" class="btn-post-job-cta">
+            + Post New Position (< 2 mins)
+          </button>
+        </div>
+
+        <div id="employer-jobs-list">
+          <!-- Dynamic Employer Rows -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- VIEW 3: FOUNDER ADMIN DASHBOARD (RBAC PROTECTED) -->
+    <section id="founder-admin-dashboard-view" class="admin-dashboard-view" style="display: none;">
+      <!-- Dashboard Top Header Bar -->
+      <div class="admin-topbar">
+        <div class="admin-title-group">
+          <div class="admin-badge-pill">
+            <span class="live-pulse"></span>
+            <span>FOUNDER ADMIN CONTROL CENTER</span>
+          </div>
+          <h2>Platform Overview & Trust Enforcement</h2>
+          <p>Real-time analytics, employer verification badges, job lifecycle oversight, and scam moderation.</p>
+        </div>
+        <div class="admin-actions-bar">
+          <button id="admin-refresh-btn" class="btn-admin-action" title="Refresh Live Data">
+            <span>🔄</span> Refresh Data
+          </button>
+          <button id="admin-exit-btn" class="btn-admin-action secondary" title="Exit to Public Feed">
+            <span>🏠</span> Return to Portal
+          </button>
+        </div>
+      </div>
+
+      <!-- Admin Navigation Tabs -->
+      <div class="admin-tabs-nav">
+        <button class="admin-tab-btn active" data-admin-tab="system-overview">
+          <span>📊</span> System Overview
+        </button>
+        <button class="admin-tab-btn" data-admin-tab="employer-moderation">
+          <span>🛡️</span> Employer Moderation & Security
+        </button>
+        <button class="admin-tab-btn" data-admin-tab="job-lifecycle">
+          <span>⚙️</span> Job Lifecycle Manager
+        </button>
+        <button class="admin-tab-btn" data-admin-tab="fraud-moderation">
+          <span>🚩</span> Fraud & Flagged Moderation
+          <span id="admin-tab-flag-count" class="admin-badge-count" style="display: none;">0</span>
+        </button>
+        <button class="admin-tab-btn" data-admin-tab="city-analytics">
+          <span>📍</span> Regional & City Analytics
+        </button>
+      </div>
+
+      <!-- TAB 1: SYSTEM OVERVIEW (KPI CARDS) -->
+      <div id="admin-tab-system-overview" class="admin-tab-panel active">
+        <!-- KPI Cards Grid -->
+        <div class="admin-kpi-grid">
+          <div class="admin-kpi-card">
+            <div class="admin-kpi-header">
+              <span class="admin-kpi-label">Total Registered Users</span>
+              <span class="admin-kpi-icon">👥</span>
+            </div>
+            <div class="admin-kpi-number" id="kpi-total-users">--</div>
+            <div class="admin-kpi-sub">
+              <span class="sub-pill blue" id="kpi-seekers-count">0 Seekers</span>
+              <span class="sub-pill green" id="kpi-providers-count">0 Employers</span>
+              <span class="sub-pill orange" id="kpi-admins-count">1 Admin</span>
+            </div>
+          </div>
+
+          <div class="admin-kpi-card">
+            <div class="admin-kpi-header">
+              <span class="admin-kpi-label">Active vs Expired Jobs</span>
+              <span class="admin-kpi-icon">💼</span>
+            </div>
+            <div class="admin-kpi-number" id="kpi-active-jobs">--</div>
+            <div class="admin-kpi-sub">
+              <span class="sub-pill green" id="kpi-active-badge">0 Active</span>
+              <span class="sub-pill gray" id="kpi-expired-badge">0 Expired</span>
+              <span class="sub-pill purple" id="kpi-filled-badge">0 Filled</span>
+            </div>
+          </div>
+
+          <div class="admin-kpi-card">
+            <div class="admin-kpi-header">
+              <span class="admin-kpi-label">Pending Verifications</span>
+              <span class="admin-kpi-icon">🛡️</span>
+            </div>
+            <div class="admin-kpi-number" id="kpi-pending-verifications">--</div>
+            <div class="admin-kpi-sub">
+              <span class="sub-pill orange" id="kpi-pending-verif-badge">0 Employers Pending</span>
+              <span class="sub-pill green" id="kpi-verified-providers-badge">0 Verified</span>
+            </div>
+          </div>
+
+          <div class="admin-kpi-card alert">
+            <div class="admin-kpi-header">
+              <span class="admin-kpi-label">Flagged Job Posts</span>
+              <span class="admin-kpi-icon">🚩</span>
+            </div>
+            <div class="admin-kpi-number text-alert" id="kpi-flagged-jobs">--</div>
+            <div class="admin-kpi-sub">
+              <span class="sub-pill red" id="kpi-pending-reports-badge">0 Pending Reports</span>
+              <button class="btn-micro" id="kpi-quick-inspect-flags">Inspect Queue →</button>
+            </div>
+          </div>
+
+          <div class="admin-kpi-card">
+            <div class="admin-kpi-header">
+              <span class="admin-kpi-label">Applications Submitted Today</span>
+              <span class="admin-kpi-icon">📝</span>
+            </div>
+            <div class="admin-kpi-number" id="kpi-today-applications">--</div>
+            <div class="admin-kpi-sub">
+              <span class="sub-pill blue" id="kpi-total-apps-badge">0 Lifetime Total</span>
+              <span class="sub-pill green" id="kpi-hired-apps-badge">0 Hired</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Summary Row: Employer Verification + Platform Health -->
+        <div class="admin-summary-split-grid">
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h4>🛡️ Employer Verification Ratio</h4>
+              <span class="status-indicator-live">Live Store Sync</span>
+            </div>
+            <div class="verification-ratio-bar-box">
+              <div class="ratio-progress-bar">
+                <div id="ratio-bar-verified" class="bar-fill verified" style="width: 50%;"></div>
+                <div id="ratio-bar-unverified" class="bar-fill unverified" style="width: 50%;"></div>
+              </div>
+              <div class="ratio-legend-row">
+                <div class="legend-item"><span class="legend-dot green"></span> <strong id="ratio-verified-num">0</strong> Verified Employers (Emerald Badge)</div>
+                <div class="legend-item"><span class="legend-dot orange"></span> <strong id="ratio-unverified-num">0</strong> Pending Verification</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <h4>⚡ Platform Health & RBAC Enforcement</h4>
+              <span class="badge-employer-verified" style="display: inline-flex;">Active Daemon (10s)</span>
+            </div>
+            <div style="font-size: 0.85rem; color: var(--neutral-mid); line-height: 1.6;">
+              <p>• <strong>RBAC Middleware:</strong> Strictly enforces <code>role === 'ADMIN'</code> on all <code>/api/v1/admin/*</code> routes.</p>
+              <p>• <strong>Lifecycle Engine:</strong> Stale jobs auto-archived upon expiry or filled quotas.</p>
+              <p>• <strong>Trust & Safety Threshold:</strong> Auto-flags any job accumulating 3+ seeker reports.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: EMPLOYER MODERATION & SECURITY -->
+      <div id="admin-tab-employer-moderation" class="admin-tab-panel">
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <div>
+              <h4>Employer Verification & Account Security</h4>
+              <p class="admin-subtext">Toggle Verified Employer badges, inspect GSTIN/PAN records, and suspend/ban suspicious accounts.</p>
+            </div>
+            <div class="search-mini-box">
+              <input type="text" id="admin-employer-search" placeholder="Search employers by name, business, phone..." />
+            </div>
+          </div>
+
+          <div class="admin-table-container">
+            <table class="admin-table" id="admin-employers-table">
+              <thead>
+                <tr>
+                  <th>Employer / Contact</th>
+                  <th>Business Name & Tax IDs</th>
+                  <th>Active Jobs</th>
+                  <th>Verified Badge</th>
+                  <th>Account Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-employers-tbody">
+                <!-- Dynamically Rendered -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: JOB LIFECYCLE MANAGER -->
+      <div id="admin-tab-job-lifecycle" class="admin-tab-panel">
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <div>
+              <h4>Platform Job Postings Lifecycle</h4>
+              <p class="admin-subtext">Monitor active/expired listings nationwide. Force expire, extend duration, or permanently delete posts.</p>
+            </div>
+            <div class="admin-filter-bar">
+              <input type="text" id="admin-jobs-search-input" placeholder="Search title, category, city..." />
+              <select id="admin-jobs-status-filter">
+                <option value="ALL">All Statuses</option>
+                <option value="ACTIVE">Active Only</option>
+                <option value="EXPIRED">Expired</option>
+                <option value="FLAGGED">Flagged</option>
+                <option value="FILLED">Filled</option>
+                <option value="REMOVED">Removed</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="admin-table-container">
+            <table class="admin-table" id="admin-jobs-table">
+              <thead>
+                <tr>
+                  <th>Job Title & Location</th>
+                  <th>Employer / Business</th>
+                  <th>Salary & Vacancies</th>
+                  <th>Status & Days Left</th>
+                  <th>Lifecycle Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-jobs-tbody">
+                <!-- Dynamically Rendered -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: FRAUD & FLAGGED CONTENT MODERATION -->
+      <div id="admin-tab-fraud-moderation" class="admin-tab-panel">
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <div>
+              <h4>🚩 Fraud & Flagged Postings Moderation Queue</h4>
+              <p class="admin-subtext">Reports submitted by job seekers regarding advance fees, fake locations, or scams.</p>
+            </div>
+            <span id="admin-flag-count-pill" class="pill-alert-count">0 Flagged Items</span>
+          </div>
+
+          <div id="admin-fraud-queue-list" class="fraud-queue-list">
+            <!-- Dynamically Rendered Cards -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: REGIONAL & CITY ANALYTICS -->
+      <div id="admin-tab-city-analytics" class="admin-tab-panel">
+        <div class="admin-card">
+          <div class="admin-card-header">
+            <div>
+              <h4>Regional Job Distribution & City Radar</h4>
+              <p class="admin-subtext">Volume of active job postings and employer density across major Indian urban hubs.</p>
+            </div>
+          </div>
+
+          <div class="city-analytics-grid" id="admin-city-analytics-grid">
+            <!-- Dynamically Rendered City Cards & Progress Bars -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL 1: 1-TAP QUICK APPLICATION (F-04) -->
+  <div id="apply-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <h3>⚡ 1-Tap Direct Application</h3>
+          <p id="modal-job-location" style="font-size: 0.82rem; color: #64748B;">Studio 9, Guntur</p>
+        </div>
+        <button id="apply-modal-close" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div style="background: var(--primary-subtle); padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.25rem; font-size: 0.88rem; color: var(--primary); font-weight: 600;">
+          Applying for: <strong id="modal-job-title">Video Editor</strong>
+        </div>
+
+        <form id="quick-apply-form">
+          <input type="hidden" id="apply-job-id" />
+          <input type="hidden" id="apply-distance" />
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Your Full Name *</label>
+              <input type="text" id="apply-seeker-name" placeholder="Enter your full name" required />
+            </div>
+            <div class="form-group">
+              <label>WhatsApp / Phone Number *</label>
+              <input type="text" id="apply-seeker-phone" placeholder="+91 98000 00000" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Short Pitch / Experience Note</label>
+            <textarea id="apply-cover-note" rows="2" placeholder="Tell the employer about your relevant experience, tools known, and when you can join..."></textarea>
+          </div>
+
+          <!-- Media Portfolio Links (YouTube / Drive / Behance) -->
+          <div class="form-group">
+            <label>Media Portfolio Links (Optional - YouTube, Google Drive, Behance)</label>
+            <input type="url" id="apply-portfolio-youtube" placeholder="https://youtube.com/watch?v=sample-video" style="margin-bottom: 0.5rem;" />
+            <input type="url" id="apply-portfolio-drive" placeholder="https://drive.google.com/drive/folders/your-samples" style="margin-bottom: 0.5rem;" />
+            <input type="url" id="apply-portfolio-behance" placeholder="https://behance.net/your-portfolio" />
+          </div>
+
+          <!-- Audio Intro Voice Clip Simulator -->
+          <div class="audio-recorder-box">
+            <label style="display: block; font-weight: 700; font-size: 0.88rem; margin-bottom: 0.5rem;">
+              🎙️ 30-Second Voice Intro (Recommended for Fast Hiring)
+            </label>
+            <button type="button" id="btn-record-audio" class="audio-record-btn">
+              🎙️ Record 30s Audio Intro
+            </button>
+            <div id="audio-waveform-container" class="waveform-canvas-box"></div>
+          </div>
+
+          <button type="submit" class="btn-apply-primary" style="width: 100%; padding: 0.85rem; font-size: 1rem;">
+            ⚡ Submit Instant 1-Tap Application
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: POST JOB WIZARD (<2 MINS) WITH AI ASSISTANT -->
+  <div id="post-job-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <h3>💼 Post a New Job in &lt; 2 Minutes</h3>
+          <p style="font-size: 0.82rem; color: #64748B;">Automated PostGIS geospatial indexing + Redis auto-expiry</p>
+        </div>
+        <button id="post-modal-close" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <form id="create-job-form">
+          <div class="form-group">
+            <label>Job Title (Hybrid Dropdown + Free-Text Tag) *</label>
+            <input type="text" id="post-title" list="master-titles-datalist" placeholder="e.g. Wedding Photographer, Cook, Delivery Executive..." required />
+            <datalist id="master-titles-datalist">
+              <option value="Wedding Photographer"></option>
+              <option value="Video Editor - Wedding Events"></option>
+              <option value="Drone Videographer"></option>
+              <option value="Cook & Head Chef"></option>
+              <option value="Delivery Executive"></option>
+              <option value="Electrician & AC Technician"></option>
+              <option value="CNC Lathe Machine Operator"></option>
+              <option value="Senior Accountant (Tally/GST)"></option>
+            </datalist>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Role Category *</label>
+              <select id="post-category" required>
+                <option value="Creative & Media">Creative & Media</option>
+                <option value="Hospitality & Food">Hospitality & Food</option>
+                <option value="Logistics & Delivery">Logistics & Delivery</option>
+                <option value="Skilled Trades">Skilled Trades</option>
+                <option value="Manufacturing">Manufacturing</option>
+                <option value="Finance & Accounts">Finance & Accounts</option>
+                <option value="General">General / Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Vacancies Quota</label>
+              <input type="number" id="post-vacancies" min="1" value="2" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Store / Studio / Hub Location Name *</label>
+            <input type="text" id="post-location-name" value="Studio 9, Brodipet 4th Lane, Guntur" required />
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Latitude (Spatial GPS Pin)</label>
+              <input type="number" step="0.0001" id="post-lat" value="16.3075" required />
+            </div>
+            <div class="form-group">
+              <label>Longitude (Spatial GPS Pin)</label>
+              <input type="number" step="0.0001" id="post-lng" value="80.4420" required />
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Monthly Salary Min (₹)</label>
+              <input type="number" id="post-salary-min" placeholder="25000" value="25000" />
+            </div>
+            <div class="form-group">
+              <label>Monthly Salary Max (₹)</label>
+              <input type="number" id="post-salary-max" placeholder="35000" value="35000" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Active Duration (Redis BullMQ Expiry Engine) *</label>
+            <select id="post-duration">
+              <option value="7">7 Days (Standard Local Hiring)</option>
+              <option value="14">14 Days (Extended Reach)</option>
+              <option value="30">30 Days (Corporate / Skilled Roles)</option>
+            </select>
+          </div>
+
+          <!-- AI Description Assistant -->
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+              <label style="margin-bottom: 0;">Job Description & Requirements *</label>
+              <button type="button" id="btn-ai-generate" class="btn-ai-sparkle">
+                ✨ Generate with AI
+              </button>
+            </div>
+            <textarea id="post-description" rows="3" required placeholder="Describe the role or tap 'Generate with AI' to auto-draft an optimized local description...">Urgent requirement for cinematic wedding video editor. Must know Premiere Pro, speed ramping, color grading in DaVinci. Quick turnaround required. High seasonal bonus available for festival assignments.</textarea>
+          </div>
+
+          <!-- Visual Canvas CAPTCHA Security Guard for Post Job -->
+          <div class="form-group captcha-container" style="background: var(--neutral-light); padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--neutral-border); margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+              <label style="font-weight: 700; margin: 0; display: flex; align-items: center; gap: 0.35rem;" data-i18n="captcha_label">
+                <span>🛡️ Security Verification (CAPTCHA) *</span>
+              </label>
+              <span style="font-size: 0.72rem; color: #64748B;">Anti-Spam Bot Protection</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+              <canvas id="post-job-captcha-canvas" width="130" height="40" style="border-radius: 6px; border: 1px solid #CBD5E1; background: #fff; cursor: pointer;" title="Click to refresh CAPTCHA"></canvas>
+              <button type="button" id="post-job-captcha-refresh" class="btn-captcha-refresh" style="background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 1rem;" title="Refresh CAPTCHA">🔄</button>
+              <input type="text" id="post-job-captcha-input" placeholder="Enter 5-character code" maxlength="5" required style="flex: 1; min-width: 140px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;" data-i18n-placeholder="captcha_placeholder" />
+            </div>
+            <div id="post-job-captcha-error" style="color: var(--alert); font-size: 0.8rem; font-weight: 600; margin-top: 0.35rem; display: none;"></div>
+          </div>
+
+          <button type="submit" class="btn-apply-primary" style="width: 100%; padding: 0.85rem; font-size: 1rem;">
+            <span data-i18n="publish_radar">🚀 Publish Job to Proximity Radar</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: CANDIDATE APPLICANTS DRAWER -->
+  <div id="applicants-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <h3 id="applicants-modal-title">Applicants Review</h3>
+          <p style="font-size: 0.82rem; color: #64748B;">Sorted by closest candidate proximity</p>
+        </div>
+        <button id="applicants-modal-close" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body" id="applicants-list-box">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: DEDICATED AUTHENTICATION & LOGIN/SIGNUP (SECTION 1) -->
+  <div id="auth-modal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 480px;">
+      <div class="modal-header">
+        <div>
+          <h3 id="auth-modal-title">Sign In to WorkLoco</h3>
+          <p id="auth-modal-sub" style="font-size: 0.82rem; color: #64748B;">Instant access to Hyperlocal Jobs & Direct Hiring</p>
+        </div>
+        <button id="auth-modal-close" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Auth Context Banner (shown if triggered by auth guard) -->
+        <div id="auth-context-banner" style="display: none; background: var(--primary-subtle); border: 1px solid var(--primary-border); border-radius: 8px; padding: 0.65rem 0.85rem; margin-bottom: 1rem; font-size: 0.85rem; color: var(--primary); font-weight: 600;">
+          🔒 Please sign in to continue
+        </div>
+
+        <!-- Auth Method Tabs -->
+        <div class="auth-tabs">
+          <button id="tab-auth-otp" class="auth-tab-btn active">📱 Mobile OTP</button>
+          <button id="tab-auth-email" class="auth-tab-btn">✉️ Email</button>
+        </div>
+
+        <!-- Optional Full Name Input for dynamic signups -->
+        <div class="form-group" id="auth-fullname-group" style="margin-bottom: 0.85rem;">
+          <label>Your Full Name</label>
+          <input type="text" id="auth-name-input" placeholder="e.g. Ramesh Kumar / Priya Patel" />
+        </div>
+
+        <!-- Interactive Visual Canvas CAPTCHA Component (Security Guard) -->
+        <div class="form-group captcha-container" id="auth-captcha-wrapper" style="background: var(--neutral-light); padding: 0.65rem 0.85rem; border-radius: var(--radius-md); border: 1px solid var(--neutral-border); margin-bottom: 0.85rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <label style="font-size: 0.78rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 0.35rem;" data-i18n="captcha_label">
+              <span>🛡️ Security Verification (CAPTCHA) *</span>
+            </label>
+            <span style="font-size: 0.7rem; color: #64748B;">Bot Protection</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <canvas id="auth-captcha-canvas" width="125" height="38" style="border-radius: 6px; border: 1px solid #CBD5E1; background: #fff; cursor: pointer;" title="Click to refresh CAPTCHA"></canvas>
+            <button type="button" id="auth-captcha-refresh" class="btn-captcha-refresh" style="background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 0.9rem;" title="Refresh CAPTCHA">🔄</button>
+            <input type="text" id="auth-captcha-input" placeholder="Enter code" maxlength="5" style="flex: 1; min-width: 100px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;" data-i18n-placeholder="captcha_placeholder" />
+          </div>
+          <div id="auth-captcha-error" style="color: var(--alert); font-size: 0.78rem; font-weight: 600; margin-top: 0.35rem; display: none;"></div>
+        </div>
+
+        <!-- TAB 1: Mobile Phone + OTP Verification -->
+        <div id="auth-view-otp">
+          <form id="form-auth-otp-send">
+            <div class="form-group">
+              <label>Enter Mobile Phone Number *</label>
+              <div style="display: flex; gap: 0.5rem;">
+                <input type="tel" id="auth-phone-input" placeholder="Enter your 10-digit mobile number" required />
+                <button type="submit" id="btn-send-otp" style="background: var(--primary); color: white; border: none; padding: 0.65rem 1rem; border-radius: var(--radius-md); font-weight: 700; white-space: nowrap; cursor: pointer;">
+                  Get OTP
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- Dynamic OTP Sent Notification Banner -->
+          <div id="auth-otp-sent-banner" style="display: none; background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 8px; padding: 0.65rem 0.85rem; margin-top: 0.85rem; font-size: 0.82rem; color: #065F46;">
+          </div>
+
+          <!-- OTP Input Section -->
+          <form id="form-auth-otp-verify" style="margin-top: 0.85rem;">
+            <div class="form-group">
+              <label>Enter 6-Digit OTP *</label>
+              <input type="text" id="auth-otp-input" placeholder="Enter 6-digit code" maxlength="6" style="font-size: 1.25rem; letter-spacing: 0.25em; text-align: center; font-weight: 700;" required />
+            </div>
+
+            <button type="submit" class="btn-apply-primary" style="width: 100%; padding: 0.75rem; font-size: 0.95rem;">
+              Verify & Sign In
+            </button>
+          </form>
+        </div>
+
+        <!-- TAB 2: Email + Password / Magic Link -->
+        <div id="auth-view-email" style="display: none;">
+          <form id="form-auth-email">
+            <div class="form-group">
+              <label>Work or Personal Email *</label>
+              <input type="email" id="auth-email-input" placeholder="you@domain.com" required />
+            </div>
+            <div class="form-group">
+              <label>Password (optional for instant magic link)</label>
+              <input type="password" id="auth-password-input" placeholder="••••••••" />
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button type="submit" class="btn-apply-primary" style="flex: 1; padding: 0.75rem;">
+                Sign In with Email
+              </button>
+              <button type="button" id="btn-magic-link" style="background: var(--neutral-light); border: 1px solid var(--neutral-border); padding: 0.75rem 1rem; border-radius: var(--radius-md); font-weight: 600; cursor: pointer;">
+                🪄 Magic Link
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="auth-divider">OR CONTINUE WITH</div>
+
+        <!-- METHOD 3: Google OAuth 2.0 Trigger -->
+        <button id="btn-google-login" class="btn-google-oauth">
+          <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.836.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.173 0 7.548 0 9s.347 2.827.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg>
+          Continue with Google
+        </button>
+
+        <!-- Toggle Sign Up vs Sign In note -->
+        <p id="auth-toggle-note" style="text-align: center; margin-top: 1.25rem; font-size: 0.82rem; color: var(--neutral-mid);">
+          New to WorkLoco? <a href="#" id="auth-toggle-btn" style="color: var(--primary); font-weight: 700; text-decoration: none;">Create an account</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 8: GOOGLE ACCOUNT SELECTION MODAL (SECTION 3) -->
+  <div id="google-account-modal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 480px; padding: 0;">
+      <div style="padding: 1.5rem 1.5rem 1rem; border-bottom: 1px solid var(--neutral-border);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+          <svg width="24" height="24" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.836.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.173 0 7.548 0 9s.347 2.827.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg>
+          <button id="google-modal-close" class="modal-close-btn">&times;</button>
+        </div>
+        <h3 style="font-size: 1.25rem;">Choose an account</h3>
+        <p style="font-size: 0.85rem; color: #64748B;">to continue to WorkLoco</p>
+      </div>
+
+      <div style="padding: 1.25rem 1.5rem;">
+        <p style="font-size: 0.8rem; font-weight: 700; color: var(--neutral-mid); text-transform: uppercase; margin-bottom: 0.75rem;">1. Select or Enter Account</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
+          <label class="google-account-radio-box active" id="g-acc-1">
+            <input type="radio" name="google_acc_select" value="priya" checked style="display: none;" />
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: #EA4335; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">P</div>
+            <div style="flex: 1;">
+              <div style="font-weight: 700; font-size: 0.92rem;">Priya Patel</div>
+              <div style="font-size: 0.8rem; color: #64748B;">priya.patel@gmail.com</div>
+            </div>
+            <span class="g-check" style="color: #059669; font-weight: 700;">✓</span>
+          </label>
+
+          <label class="google-account-radio-box" id="g-acc-2">
+            <input type="radio" name="google_acc_select" value="rahul" style="display: none;" />
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: #4285F4; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">R</div>
+            <div style="flex: 1;">
+              <div style="font-weight: 700; font-size: 0.92rem;">Rahul Verma</div>
+              <div style="font-size: 0.8rem; color: #64748B;">rahul.verma@gmail.com</div>
+            </div>
+            <span class="g-check" style="display: none; color: #059669; font-weight: 700;">✓</span>
+          </label>
+
+          <label class="google-account-radio-box" id="g-acc-admin">
+            <input type="radio" name="google_acc_select" value="admin" style="display: none;" />
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: #D94A26; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700;">⚡</div>
+            <div style="flex: 1;">
+              <div style="font-weight: 700; font-size: 0.92rem; display: flex; align-items: center; gap: 0.35rem;">
+                Founder Admin
+                <span style="background: var(--primary); color: white; font-size: 0.62rem; padding: 1px 5px; border-radius: 4px; font-weight: 800;">ADMIN</span>
+              </div>
+              <div style="font-size: 0.8rem; color: #64748B;">+91 7993094858 • admin@workloco.in</div>
+            </div>
+            <span class="g-check" style="display: none; color: #059669; font-weight: 700;">✓</span>
+          </label>
+
+          <label class="google-account-radio-box" id="g-acc-custom">
+            <input type="radio" name="google_acc_select" value="custom" style="display: none;" />
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: #F1F5F9; color: #64748B; display: flex; align-items: center; justify-content: center; font-weight: 700;">+</div>
+            <div style="flex: 1;">
+              <div style="font-weight: 700; font-size: 0.92rem;">Use another account</div>
+              <div style="font-size: 0.8rem; color: #64748B;">Enter your own Google details</div>
+            </div>
+            <span class="g-check" style="display: none; color: #059669; font-weight: 700;">✓</span>
+          </label>
+        </div>
+
+        <!-- Custom Google Account Inputs -->
+        <div id="google-custom-inputs" style="display: none; background: var(--neutral-light); padding: 0.85rem; border-radius: 8px; margin-bottom: 1rem;">
+          <div class="form-group" style="margin-bottom: 0.5rem;">
+            <label style="font-size: 0.78rem;">Your Full Name *</label>
+            <input type="text" id="g-custom-name" placeholder="e.g. Vikram Reddy" />
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-size: 0.78rem;">Your Gmail Address *</label>
+            <input type="email" id="g-custom-email" placeholder="vikram@gmail.com" />
+          </div>
+        </div>
+
+        <!-- Step 2: Role Selection for Google Login -->
+        <p style="font-size: 0.8rem; font-weight: 700; color: var(--neutral-mid); text-transform: uppercase; margin-bottom: 0.5rem;">2. Select Primary Purpose</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.4rem; margin-bottom: 1.25rem;">
+          <label class="role-select-box active" id="g-role-seeker">
+            <input type="radio" name="google_role_select" value="SEEKER" checked style="display: none;" />
+            <span style="font-size: 1.1rem;">🎯</span>
+            <strong style="font-size: 0.80rem; display: block;">Job Seeker</strong>
+            <span style="font-size: 0.68rem; color: #64748B;">Looking for work</span>
+          </label>
+          <label class="role-select-box" id="g-role-provider">
+            <input type="radio" name="google_role_select" value="PROVIDER" style="display: none;" />
+            <span style="font-size: 1.1rem;">💼</span>
+            <strong style="font-size: 0.80rem; display: block;">Job Provider</strong>
+            <span style="font-size: 0.68rem; color: #64748B;">Hiring staff</span>
+          </label>
+          <label class="role-select-box" id="g-role-admin">
+            <input type="radio" name="google_role_select" value="ADMIN" style="display: none;" />
+            <span style="font-size: 1.1rem;">⚡</span>
+            <strong style="font-size: 0.80rem; display: block;">Founder Admin</strong>
+            <span style="font-size: 0.68rem; color: #64748B;">Platform Controls</span>
+          </label>
+        </div>
+
+        <button id="btn-confirm-google-auth" class="btn-apply-primary" style="width: 100%; padding: 0.75rem;">
+          Continue as Priya Patel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 5: POST-LOGIN USER INTENT ROUTING (SECTION 1) -->
+  <div id="intent-modal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 540px;">
+      <div class="modal-header">
+        <div>
+          <h3>Welcome to WorkLoco! 🇮🇳</h3>
+          <p style="font-size: 0.85rem; color: #64748B;">What is your primary goal today?</p>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="intent-cards-grid">
+          <!-- Option A: Seeker -->
+          <div class="intent-card" id="intent-choice-seeker">
+            <div class="intent-card-icon">🎯</div>
+            <h4>I want to Find a Job</h4>
+            <p>Scan verified nearby shops, offices, and gigs using the Geospatial Proximity Radar.</p>
+            <button class="btn-apply-primary" style="margin-top: 1rem; width: 100%; font-size: 0.85rem;">
+              Explore Radar
+            </button>
+          </div>
+
+          <!-- Option B: Employer -->
+          <div class="intent-card" id="intent-choice-provider">
+            <div class="intent-card-icon">💼</div>
+            <h4>I want to Hire</h4>
+            <p>Post open positions in &lt; 2 mins, review proximity-sorted applicants, and connect directly.</p>
+            <button class="btn-post-job-cta" style="margin-top: 1rem; width: 100%; font-size: 0.85rem; justify-content: center;">
+              Hire Staff
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 6: 2-STEP EMPLOYER VERIFICATION GUARD (SECTION 2) -->
+  <div id="employer-verify-modal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 520px;">
+      <div class="modal-header">
+        <div>
+          <h3>🛡️ Employer Verification Guard</h3>
+          <p style="font-size: 0.82rem; color: #64748B;">Scam Prevention & Trust Verification</p>
+        </div>
+        <button id="employer-verify-close" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; padding: 0.85rem; margin-bottom: 1.25rem; font-size: 0.82rem; color: #92400E;">
+          <strong>WorkLoco Trust Policy:</strong> To protect job seekers from scam listings and fake fees, employers must complete verification before publishing posts to the public proximity radar.
+        </div>
+
+        <form id="employer-verification-form">
+          <!-- Step 1: Mandatory Phone OTP -->
+          <div style="margin-bottom: 1.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <span style="background: var(--primary); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;">1</span>
+              <strong style="font-size: 0.9rem;">Mandatory Mobile Phone OTP *</strong>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="text" id="verify-employer-phone" value="+91 98480 12345" style="flex: 1;" readonly />
+              <input type="text" id="verify-employer-otp" placeholder="OTP (123456)" value="123456" style="width: 130px; font-weight: 700; text-align: center;" required />
+            </div>
+          </div>
+
+          <!-- Step 2: Business Verification -->
+          <div style="margin-bottom: 1.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <span style="background: var(--success); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;">2</span>
+              <strong style="font-size: 0.9rem;">Business Verification (GSTIN / PAN / Pincode Match)</strong>
+            </div>
+            <div class="form-group" style="margin-bottom: 0.5rem;">
+              <label>Business / Shop Legal Name</label>
+              <input type="text" id="verify-business-name" placeholder="e.g. Studio 9 Arts / Apex Logistics" value="Studio 9 Digital Arts" />
+            </div>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>GSTIN (Optional)</label>
+                <input type="text" id="verify-gstin" placeholder="37AAAAA0000A1Z5" value="37AAAAA0000A1Z5" />
+              </div>
+              <div class="form-group">
+                <label>PAN or Pincode Match</label>
+                <input type="text" id="verify-pan" placeholder="ABCDE1234F or 522002" value="ABCDE1234F" />
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-apply-primary" style="width: 100%; padding: 0.85rem; font-size: 0.95rem;">
+            🛡️ Complete 2-Step Verification & Post Job
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 7: FLAG & REPORT SCAM POST (SECTION 2) -->
+  <div id="report-job-modal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 480px;">
+      <div class="modal-header">
+        <div>
+          <h3>🚩 Report Suspicious Job</h3>
+          <p style="font-size: 0.82rem; color: #64748B;">WorkLoco Trust & Safety Guard</p>
+        </div>
+        <button id="report-job-close" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <form id="report-job-form">
+          <input type="hidden" id="report-job-id" />
+
+          <p style="font-size: 0.88rem; font-weight: 600; margin-bottom: 0.75rem;">
+            Reporting: <span id="report-job-title" style="color: var(--primary);">--</span>
+          </p>
+
+          <div class="form-group">
+            <label>Why are you reporting this post? *</label>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.4rem; font-size: 0.88rem;">
+              <label style="font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                <input type="radio" name="report_reason" value="ASKS_FOR_MONEY" checked />
+                Employer asked for money / registration fee / deposit
+              </label>
+              <label style="font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                <input type="radio" name="report_reason" value="SCAM_OR_FRAUD" />
+                Scam, fraudulent, or fake hiring promise
+              </label>
+              <label style="font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                <input type="radio" name="report_reason" value="FAKE_LOCATION" />
+                Fake store / studio address does not exist
+              </label>
+              <label style="font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                <input type="radio" name="report_reason" value="MISLEADING_SALARY" />
+                Misleading salary or incorrect terms
+              </label>
+              <label style="font-weight: 500; display: flex; align-items: center; gap: 0.5rem;">
+                <input type="radio" name="report_reason" value="INAPPROPRIATE" />
+                Inappropriate or abusive content
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Additional Evidence or Notes</label>
+            <textarea id="report-job-desc" rows="3" placeholder="Provide any details (e.g. WhatsApp message asking for ₹500 fee)..."></textarea>
+          </div>
+
+          <button type="submit" style="width: 100%; background: var(--alert); color: white; border: none; padding: 0.8rem; border-radius: var(--radius-md); font-weight: 700; cursor: pointer;">
+            🚩 Submit Report to Trust & Safety
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DEDICATED USER PROFILE VIEW & EDIT MODAL (SECTION 1) -->
+  <div id="profile-modal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 540px; padding: 0; overflow: hidden; border-radius: var(--radius-lg);">
+      <!-- Profile Modal Header Banner -->
+      <div style="background: linear-gradient(135deg, var(--primary) 0%, #B93815 100%); padding: 1.5rem 1.5rem 2.25rem; color: white; position: relative;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+          <h3 style="color: white; margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span>👤</span> <span data-i18n="my_profile">My Profile</span>
+          </h3>
+          <button id="profile-modal-close" class="modal-close-btn" style="color: white; background: rgba(255,255,255,0.2);" aria-label="Close Profile">&times;</button>
+        </div>
+        <p style="margin: 0; font-size: 0.8rem; color: rgba(255,255,255,0.85);" data-i18n="profile_sub">
+          WorkLoco Verified Member • PostGIS Proximity Network
+        </p>
+      </div>
+
+      <!-- Profile Avatar Floating Over Banner -->
+      <div style="padding: 0 1.5rem; margin-top: -2.25rem; position: relative; z-index: 2;">
+        <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem;">
+          <div style="position: relative;">
+            <div id="profile-view-avatar-box" style="width: 76px; height: 76px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 800; overflow: hidden;">
+              <img id="profile-view-avatar-img" src="" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; display: none;" />
+              <span id="profile-view-avatar-initials">U</span>
+            </div>
+          </div>
+          <button type="button" id="btn-toggle-edit-profile" class="btn-post-job-cta" style="padding: 0.45rem 1rem; font-size: 0.82rem; border-radius: 20px; box-shadow: var(--shadow-sm);">
+            <span>✏️</span> <span data-i18n="edit_profile">Edit Profile</span>
+          </button>
+        </div>
+      </div>
+
+      <div style="padding: 1.25rem 1.5rem 1.5rem;">
+        <!-- READ-ONLY VIEW MODE -->
+        <div id="profile-display-section">
+          <div style="margin-bottom: 1rem;">
+            <h2 id="profile-display-name" style="font-size: 1.3rem; font-weight: 800; margin: 0 0 0.35rem 0; color: var(--neutral-dark);">User Name</h2>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center;">
+              <span id="profile-display-role-badge" class="badge" style="background: var(--primary); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 700;">SEEKER</span>
+              <span id="profile-display-verified-badge" class="badge-employer-verified" style="font-size: 0.72rem;">✓ Phone Verified</span>
+              <span id="profile-display-lang-badge" class="badge" style="background: var(--neutral-light); border: 1px solid var(--neutral-border); color: #475569; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem;">🌐 en</span>
+            </div>
+          </div>
+
+          <!-- Contact & Location Info Grid (View Mode) -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+            <div style="background: var(--neutral-light); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--neutral-border);">
+              <div style="font-size: 0.7rem; color: var(--neutral-mid); font-weight: 700; text-transform: uppercase;">📱 Phone Number</div>
+              <div id="profile-display-phone" style="font-size: 0.85rem; font-weight: 600; color: var(--neutral-dark); margin-top: 0.2rem;">Not provided</div>
+            </div>
+            <div style="background: var(--neutral-light); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--neutral-border);">
+              <div style="font-size: 0.7rem; color: var(--neutral-mid); font-weight: 700; text-transform: uppercase;">✉️ Email Address</div>
+              <div id="profile-display-email" style="font-size: 0.85rem; font-weight: 600; color: var(--neutral-dark); margin-top: 0.2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Not provided</div>
+            </div>
+            <div style="background: var(--neutral-light); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--neutral-border);">
+              <div style="font-size: 0.7rem; color: var(--neutral-mid); font-weight: 700; text-transform: uppercase;">📍 City / Location</div>
+              <div id="profile-display-city" style="font-size: 0.85rem; font-weight: 600; color: var(--neutral-dark); margin-top: 0.2rem;">All India / Remote</div>
+            </div>
+            <div style="background: var(--neutral-light); padding: 0.75rem; border-radius: 8px; border: 1px solid var(--neutral-border);">
+              <div style="font-size: 0.7rem; color: var(--neutral-mid); font-weight: 700; text-transform: uppercase;">🎯 Role / Intent</div>
+              <div id="profile-display-role-text" style="font-size: 0.85rem; font-weight: 600; color: var(--neutral-dark); margin-top: 0.2rem;">Job Seeker</div>
+            </div>
+          </div>
+
+          <!-- Business Name Row (Shown for Employers/Admins) -->
+          <div id="profile-display-business-row" class="form-group" style="display: none; background: #F8FAFC; padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid var(--neutral-border); margin-bottom: 1rem;">
+            <label style="font-size: 0.72rem; text-transform: uppercase; color: var(--neutral-mid); font-weight: 700; margin-bottom: 0.25rem;">🏢 Business / Enterprise Name</label>
+            <p id="profile-display-business" style="font-size: 0.9rem; font-weight: 600; color: #1E293B; margin: 0;">--</p>
+          </div>
+
+          <!-- Bio / Overview Summary -->
+          <div class="form-group" style="background: var(--neutral-light); padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid var(--neutral-border); margin-bottom: 1rem;">
+            <label style="font-size: 0.72rem; text-transform: uppercase; color: var(--neutral-mid); font-weight: 700; margin-bottom: 0.25rem;" data-i18n="bio_label">Bio & Overview</label>
+            <p id="profile-display-bio" style="font-size: 0.88rem; color: #334155; margin: 0; line-height: 1.5;">No bio added yet.</p>
+          </div>
+
+          <!-- Key Skills Container (Shown for Seekers) -->
+          <div id="profile-display-skills-row" class="form-group" style="display: none; background: var(--neutral-light); padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid var(--neutral-border); margin-bottom: 1rem;">
+            <label style="font-size: 0.72rem; text-transform: uppercase; color: var(--neutral-mid); font-weight: 700; margin-bottom: 0.25rem;">⚡ Key Skills & Expertise</label>
+            <div id="profile-display-skills-list" style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.35rem;">
+              <!-- Dynamic chips -->
+            </div>
+          </div>
+
+          <!-- Portfolio / Work Link (Shown for Seekers) -->
+          <div id="profile-display-portfolio-row" class="form-group" style="display: none; background: var(--neutral-light); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--neutral-border); margin-bottom: 1rem;">
+            <label style="font-size: 0.72rem; text-transform: uppercase; color: var(--neutral-mid); font-weight: 700; margin-bottom: 0.25rem;">🔗 Portfolio / Work Link</label>
+            <div>
+              <a id="profile-display-portfolio-link" href="#" target="_blank" rel="noopener noreferrer" style="font-size: 0.85rem; color: var(--primary); font-weight: 600; text-decoration: underline; word-break: break-all;">
+                View Portfolio
+              </a>
+            </div>
+          </div>
+
+          <!-- Profile Dashboard Bottom Actions: Sign Out & Close -->
+          <div class="profile-dashboard-footer" style="border-top: 1px solid var(--neutral-border); padding-top: 1.25rem; margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.85rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #94A3B8; flex-wrap: wrap; gap: 0.5rem;">
+              <span>Session Status: <strong style="color: #059669;">Authenticated</strong></span>
+              <span>User ID: <span id="profile-display-uid" style="font-family: monospace; color: #64748B;">u-xxx</span></span>
+            </div>
+            <div style="display: flex; gap: 0.75rem; align-items: center; width: 100%;">
+              <button type="button" id="profile-signout-btn" class="btn-profile-signout" style="flex: 1; background: #FEE2E2; color: #DC2626; border: 1.5px solid #FECACA; padding: 0.75rem 1.25rem; border-radius: var(--radius-md); font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.45rem; font-size: 0.88rem; transition: all 0.2s ease;">
+                <span>🚪</span> <span data-i18n="sign_out">Sign Out</span>
+              </button>
+              <button type="button" id="profile-modal-done-btn" style="background: var(--neutral-light); border: 1px solid var(--neutral-border); padding: 0.75rem 1.5rem; border-radius: var(--radius-md); font-weight: 600; cursor: pointer; font-size: 0.88rem; color: var(--neutral-dark);">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- EDIT PROFILE FORM (HIDDEN BY DEFAULT) -->
+        <form id="profile-edit-form" style="display: none;">
+          <h4 style="margin: 0 0 1rem 0; font-size: 0.95rem; color: var(--neutral-dark); display: flex; align-items: center; gap: 0.4rem;">
+            <span>📝</span> <span data-i18n="edit_profile_details">Edit Profile Details</span>
+          </h4>
+
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" id="edit-profile-name" required placeholder="Your full legal or professional name" />
+          </div>
+
+          <div class="form-group">
+            <label>Profile Photo / Avatar URL</label>
+            <input type="url" id="edit-profile-avatar" placeholder="https://images.unsplash.com/... or public image link" />
+            <span style="font-size: 0.72rem; color: #64748B;">Enter a public image URL for your profile photo</span>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Location / Preferred City</label>
+              <input type="text" id="edit-profile-city" placeholder="e.g. Guntur, Hyderabad, Bangalore..." />
+            </div>
+            <div class="form-group">
+              <label>Preferred Role *</label>
+              <select id="edit-profile-role" required>
+                <option value="SEEKER">Job Seeker (Candidate)</option>
+                <option value="PROVIDER">Job Provider (Employer / Recruiter)</option>
+                <option value="ADMIN" id="edit-profile-role-admin-opt" style="display: none;">Founder Admin</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Bio / Short Summary</label>
+            <textarea id="edit-profile-bio" rows="3" placeholder="Tell local recruiters or job seekers about your experience, services, or business..."></textarea>
+          </div>
+
+          <!-- Dynamic Role-Specific Fields (Seekers: Skills & Portfolio) -->
+          <div id="edit-profile-seeker-fields">
+            <div class="form-group">
+              <label>Key Skills (Comma-separated)</label>
+              <input type="text" id="edit-profile-skills" placeholder="e.g. Video Editing, DaVinci Resolve, Photography, Premiere Pro" />
+              <span style="font-size: 0.72rem; color: #64748B;">Separate skills with commas (e.g. Electrician, Wiring, AC Repair)</span>
+            </div>
+            <div class="form-group">
+              <label>Portfolio / Work Link</label>
+              <input type="url" id="edit-profile-portfolio" placeholder="https://behance.net/... or https://github.com/..." />
+            </div>
+          </div>
+
+          <!-- Dynamic Role-Specific Fields (Employers: Business Name) -->
+          <div id="edit-profile-provider-fields" style="display: none;">
+            <div class="form-group">
+              <label>Business / Enterprise Name</label>
+              <input type="text" id="edit-profile-business" placeholder="e.g. Studio 9 Digital Arts, Apex Logistics" />
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="tel" id="edit-profile-phone" placeholder="+91 98765 43210" />
+            </div>
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" id="edit-profile-email" placeholder="you@domain.com" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Preferred Language</label>
+            <select id="edit-profile-language">
+              <option value="en">English</option>
+              <option value="te">తెలుగు (Telugu)</option>
+              <option value="hi">हिन्दी (Hindi)</option>
+              <option value="ta">தமிழ் (Tamil)</option>
+              <option value="kn">ಕನ್ನಡ (Kannada)</option>
+              <option value="mr">मराठी (Marathi)</option>
+            </select>
+          </div>
+
+          <div class="edit-profile-actions-bar" style="display: flex; gap: 0.75rem; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--neutral-border);">
+            <button type="submit" id="btn-save-profile" class="btn-apply-primary" style="flex: 1; padding: 0.85rem 1.25rem; font-size: 0.95rem; font-weight: 700; background: var(--primary); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; box-shadow: var(--shadow-sm); transition: transform 0.15s ease;">
+              <span>💾</span> <span data-i18n="save_changes">Save Changes</span>
+            </button>
+            <button type="button" id="btn-cancel-edit-profile" class="btn-cancel-outline" style="background: white; border: 1.5px solid var(--neutral-border); padding: 0.85rem 1.5rem; border-radius: var(--radius-md); font-weight: 600; cursor: pointer; color: var(--neutral-dark); transition: all 0.15s ease;">
+              <span data-i18n="cancel">Cancel</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR DRAWER ("W" MENU DRAWER) -->
+  <div id="sidebar-drawer-overlay" class="sidebar-overlay">
+    <div class="sidebar-drawer">
+      <div class="drawer-header">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <div class="logo-icon" style="width: 32px; height: 32px; font-size: 1rem;">W</div>
+          <h3 style="font-size: 1.15rem;">Work<span>Loco</span></h3>
+        </div>
+        <button id="sidebar-close-btn" class="modal-close-btn" aria-label="Close Menu">&times;</button>
+      </div>
+
+      <!-- User Profile Card in Drawer (Defaults to Unauthenticated Guest) -->
+      <div class="drawer-user-card">
+        <div class="user-avatar-pill" id="drawer-user-avatar" style="width: 44px; height: 44px; font-size: 1.2rem;">?</div>
+        <div>
+          <h4 id="drawer-user-name" style="font-size: 0.95rem;">Guest User</h4>
+          <p id="drawer-user-phone" style="font-size: 0.78rem; color: #64748B;">Not signed in</p>
+          <span id="drawer-user-badge" class="badge-employer-unverified" style="font-size: 0.68rem; margin-top: 0.2rem; display: none;">
+            Guest
+          </span>
+        </div>
+      </div>
+
+      <!-- INSTANT ROLE SWITCHING DROPDOWN (DEVELOPER / FOUNDER TESTING) -->
+      <div class="drawer-role-switcher" style="margin: 0.75rem 1.25rem 0.85rem 1.25rem; background: #F8FAFC; border: 1.5px solid #CBD5E1; border-radius: 8px; padding: 0.75rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+          <label for="dev-role-switcher-select" style="font-size: 0.72rem; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 0.35rem;">
+            <span>🧪</span> Role Switcher
+          </label>
+          <span style="font-size: 0.65rem; background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; padding: 1px 6px; border-radius: 4px; font-weight: 700;">TESTING</span>
+        </div>
+        <select id="dev-role-switcher-select" style="width: 100%; padding: 0.45rem 0.6rem; font-size: 0.85rem; font-weight: 600; border-radius: 6px; border: 1.5px solid var(--neutral-border); background: white; color: #0F172A; cursor: pointer;">
+          <option value="GUEST">Guest</option>
+          <option value="SEEKER">Job Seeker</option>
+          <option value="PROVIDER">Job Provider</option>
+          <option value="ADMIN">Founder / Admin</option>
+        </select>
+        <div style="font-size: 0.68rem; color: #64748B; margin-top: 0.3rem;">
+          Instant role switch for platform testing.
+        </div>
+      </div>
+
+      <!-- Navigation Drawer Items -->
+      <ul class="drawer-menu-list">
+        <!-- Founder / Admin Console (Prominent button at the very top of drawer) -->
+        <li class="drawer-menu-item drawer-item-admin-featured" id="drawer-item-admin" style="display: none; background: linear-gradient(135deg, rgba(217, 74, 38, 0.12), rgba(217, 74, 38, 0.05)); border: 1.5px solid rgba(217, 74, 38, 0.35); border-radius: 8px; margin-bottom: 0.6rem; padding: 0.85rem 1rem; cursor: pointer;">
+          <div class="drawer-menu-item-left">
+            <span style="font-size: 1.15rem;">⚡</span>
+            <div>
+              <div style="font-weight: 800; color: var(--primary); font-size: 0.95rem;">Founder / Admin Console</div>
+              <div style="font-size: 0.72rem; color: #64748B;">Platform KPIs, Moderation & Radar</div>
+            </div>
+          </div>
+          <span class="badge" style="background: var(--primary); color: #fff; font-size: 0.68rem; padding: 3px 8px; border-radius: 4px; font-weight: 800; letter-spacing: 0.5px;">ADMIN</span>
+        </li>
+
+        <!-- 1. My Profile -->
+        <li class="drawer-menu-item" id="drawer-item-profile">
+          <div class="drawer-menu-item-left">
+            <span>👤</span>
+            <span data-i18n="my_profile">My Profile</span>
+          </div>
+          <span style="font-size: 0.75rem; color: #94A3B8;">›</span>
+        </li>
+
+        <!-- 2. Settings (Language, Theme, Notifications) -->
+        <li class="drawer-menu-item" id="drawer-item-settings">
+          <div class="drawer-menu-item-left">
+            <span>⚙️</span>
+            <div>
+              <div style="font-weight: 600;" data-i18n="settings">Settings</div>
+              <div style="font-size: 0.72rem; color: #64748B;">Language • Theme • Notifications</div>
+            </div>
+          </div>
+          <span style="font-size: 0.75rem; color: #94A3B8;">›</span>
+        </li>
+
+        <!-- 3. Help & Support -->
+        <li class="drawer-menu-item" id="drawer-item-support">
+          <div class="drawer-menu-item-left">
+            <span>💬</span>
+            <span data-i18n="help_support">Help & Support</span>
+          </div>
+          <span style="font-size: 0.75rem; color: #25D366; font-weight: 700;">WhatsApp Help</span>
+        </li>
+
+        <!-- 4. About WorkLoco -->
+        <li class="drawer-menu-item" id="drawer-item-about">
+          <div class="drawer-menu-item-left">
+            <span>ℹ️</span>
+            <span data-i18n="about_workloco">About WorkLoco</span>
+          </div>
+          <span style="font-size: 0.72rem; color: var(--primary); font-weight: 700;">v2.0 Bharat</span>
+        </li>
+
+        <!-- 5. Feedback -->
+        <li class="drawer-menu-item" id="drawer-item-feedback">
+          <div class="drawer-menu-item-left">
+            <span>⭐</span>
+            <span>Feedback</span>
+          </div>
+          <span style="font-size: 0.75rem; color: #94A3B8;">›</span>
+        </li>
+
+        <!-- 6. Security & Privacy -->
+        <li class="drawer-menu-item" id="drawer-item-security">
+          <div class="drawer-menu-item-left">
+            <span>🛡️</span>
+            <span>Security & Privacy</span>
+          </div>
+          <span style="font-size: 0.72rem; color: #059669; font-weight: 700;">Protected</span>
+        </li>
+
+        <!-- Sign Out (Last Item in Drawer List) -->
+        <li class="drawer-menu-item" id="drawer-item-signout" style="color: #DC2626; border-top: 1px solid var(--neutral-border); margin-top: 0.5rem; cursor: pointer;">
+          <div class="drawer-menu-item-left">
+            <span>🚪</span>
+            <span style="font-weight: 700; color: #DC2626;">Sign Out</span>
+          </div>
+          <span id="drawer-signout-badge" style="font-size: 0.72rem; color: #DC2626; font-weight: 700; background: #FEE2E2; padding: 2px 8px; border-radius: 4px;">Log Out</span>
+        </li>
+      </ul>
+
+      <!-- Drawer Footer Auth Button (Sign In when guest / Sign Out when logged in) -->
+      <div style="padding: 1.25rem; border-top: 1px solid var(--neutral-border);">
+        <button id="drawer-auth-btn" style="width: 100%; background: var(--primary); border: none; padding: 0.75rem; border-radius: var(--radius-md); font-weight: 700; cursor: pointer; color: white;">
+          Sign In / Register
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SETTINGS MODAL (Language, Theme, Notifications) -->
+  <div id="settings-modal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3>⚙️ Settings</h3>
+        <button id="settings-modal-close" class="modal-close-btn">&times;</button>
+      </div>
+      <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem;">
+        <!-- Language Setting -->
+        <div style="background: var(--neutral-light); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--neutral-border);">
+          <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span>🌐</span> <span>Preferred Language</span>
+          </div>
+          <p style="font-size: 0.78rem; color: var(--neutral-mid); margin-bottom: 0.75rem;">
+            Choose your regional language for radar feeds, SMS, and WhatsApp alerts.
+          </p>
+          <select id="settings-language-select" class="form-input" style="width: 100%; padding: 0.6rem; border-radius: var(--radius-md); border: 1px solid var(--neutral-border); font-size: 0.9rem; font-weight: 600;">
+            <option value="en">English</option>
+            <option value="te">తెలుగు (Telugu)</option>
+            <option value="hi">हिन्दी (Hindi)</option>
+            <option value="ta">தமிழ் (Tamil)</option>
+            <option value="kn">ಕನ್ನಡ (Kannada)</option>
+            <option value="mr">मराठी (Marathi)</option>
+          </select>
+        </div>
+
+        <!-- Theme Setting -->
+        <div style="background: var(--neutral-light); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--neutral-border); display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;">
+              <span>🎨</span> <span>Theme & Appearance</span>
+            </div>
+            <p style="font-size: 0.78rem; color: var(--neutral-mid); margin: 0.2rem 0 0 0;">
+              Switch between Light Mode and Dark Mode.
+            </p>
+          </div>
+          <div class="theme-toggle-switch" id="settings-theme-toggle" title="Toggle Light/Dark Theme" style="cursor: pointer;">
+            <span class="theme-toggle-option active" id="settings-theme-light">☀️ Light</span>
+            <span class="theme-toggle-option" id="settings-theme-dark">🌙 Dark</span>
+          </div>
+        </div>
+
+        <!-- Notifications Setting -->
+        <div style="background: var(--neutral-light); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--neutral-border);">
+          <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span>🔔</span> <span>Notifications & Alerts</span>
+          </div>
+          <p style="font-size: 0.78rem; color: var(--neutral-mid); margin-bottom: 0.75rem;">
+            Manage how you receive proximity job alerts and recruiter updates.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.85rem;">
+            <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer;">
+              <input type="checkbox" id="notif-pref-radar" checked />
+              <span>Proximity Job Radar alerts within search radius</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer;">
+              <input type="checkbox" id="notif-pref-status" checked />
+              <span>1-Tap application status changes & interview calls</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.6rem; cursor: pointer;">
+              <input type="checkbox" id="notif-pref-whatsapp" checked />
+              <span>Direct WhatsApp recruiter connects</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Developer / Founder Active Role Switcher -->
+        <div style="background: #F8FAFC; padding: 1rem; border-radius: var(--radius-md); border: 1.5px solid #CBD5E1;">
+          <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 0.35rem; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span>🧪</span> <span>Role Switcher (Testing)</span>
+            </div>
+            <span style="font-size: 0.65rem; background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; padding: 1px 6px; border-radius: 4px; font-weight: 700;">TESTING</span>
+          </div>
+          <p style="font-size: 0.78rem; color: var(--neutral-mid); margin-bottom: 0.75rem;">
+            Instant role switch between Guest, Job Seeker, Job Provider, and Founder / Admin.
+          </p>
+          <select id="settings-role-switcher-select" class="form-input" style="width: 100%; padding: 0.6rem; border-radius: var(--radius-md); border: 1.5px solid var(--neutral-border); font-size: 0.9rem; font-weight: 600; background: white;">
+            <option value="GUEST">Guest</option>
+            <option value="SEEKER">Job Seeker</option>
+            <option value="PROVIDER">Job Provider</option>
+            <option value="ADMIN">Founder / Admin</option>
+          </select>
+        </div>
+
+        <button type="button" id="settings-modal-save-btn" class="btn-apply-primary" style="width: 100%; padding: 0.75rem; font-weight: 700;">
+          Save Preferences
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: FEEDBACK MODAL -->
+  <div id="feedback-modal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 460px;">
+      <div class="modal-header">
+        <h3>⭐ Share Your Feedback</h3>
+        <button id="feedback-modal-close" class="modal-close-btn">&times;</button>
+      </div>
+      <form id="feedback-modal-form" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+        <p style="font-size: 0.85rem; color: var(--neutral-mid); margin: 0;">
+          Help us build the most accessible and honest employment platform for Bharat.
+        </p>
+
+        <div class="form-group">
+          <label>Experience Rating</label>
+          <div style="display: flex; gap: 0.5rem; font-size: 1.5rem; cursor: pointer;" id="feedback-stars">
+            <span class="star-rating-item" data-val="1">⭐</span>
+            <span class="star-rating-item" data-val="2">⭐</span>
+            <span class="star-rating-item" data-val="3">⭐</span>
+            <span class="star-rating-item" data-val="4">⭐</span>
+            <span class="star-rating-item" data-val="5">⭐</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Category</label>
+          <select id="feedback-category" class="form-input">
+            <option value="GENERAL">General Experience</option>
+            <option value="FEATURE">Feature Suggestion</option>
+            <option value="BUG">Report a Bug / Issue</option>
+            <option value="HIRING">Employer Hiring Experience</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Your Feedback *</label>
+          <textarea id="feedback-message" rows="3" required placeholder="What do you love? What can we improve?"></textarea>
+        </div>
+
+        <button type="submit" class="btn-apply-primary" style="padding: 0.75rem; font-weight: 700;">
+          Submit Feedback
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: SECURITY & PRIVACY MODAL -->
+  <div id="security-modal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3>🛡️ Security & Privacy Shield</h3>
+        <button id="security-modal-close" class="modal-close-btn">&times;</button>
+      </div>
+      <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+        <div style="display: flex; gap: 0.85rem; align-items: flex-start; background: #ECFDF5; padding: 1rem; border-radius: var(--radius-md); border: 1px solid #A7F3D0;">
+          <span style="font-size: 1.5rem;">🔒</span>
+          <div>
+            <h4 style="margin: 0 0 0.25rem 0; color: #065F46; font-size: 0.95rem;">Zero Fee Guarantee</h4>
+            <p style="margin: 0; font-size: 0.82rem; color: #047857; line-height: 1.4;">
+              WorkLoco verified employers are strictly prohibited from demanding training, registration, or placement fees.
+            </p>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.85rem; align-items: flex-start; background: var(--neutral-light); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--neutral-border);">
+          <span style="font-size: 1.5rem;">📱</span>
+          <div>
+            <h4 style="margin: 0 0 0.25rem 0; color: var(--neutral-dark); font-size: 0.95rem;">2-Step Verification</h4>
+            <p style="margin: 0; font-size: 0.82rem; color: var(--neutral-mid); line-height: 1.4;">
+              All employers undergo phone OTP + GSTIN/PAN verification before their postings earn the verified trust badge.
+            </p>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.85rem; align-items: flex-start; background: var(--neutral-light); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--neutral-border);">
+          <span style="font-size: 1.5rem;">📍</span>
+          <div>
+            <h4 style="margin: 0 0 0.25rem 0; color: var(--neutral-dark); font-size: 0.95rem;">Privacy-Preserving Spatial Geometry</h4>
+            <p style="margin: 0; font-size: 0.82rem; color: var(--neutral-mid); line-height: 1.4;">
+              Job candidate exact coordinates are never shared publicly. Only radial proximity (e.g. 2.4 km) is computed via PostGIS.
+            </p>
+          </div>
+        </div>
+
+        <button type="button" id="security-modal-done-btn" class="btn-apply-primary" style="padding: 0.75rem; font-weight: 700;">
+          Got It, Thanks!
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Real-Time Lifecycle Audit Ticker Bar -->
+  <div class="lifecycle-ticker-bar">
+    <div class="ticker-content">
+      <span class="ticker-badge">LIFECYCLE ENGINE</span>
+      <span id="lifecycle-ticker-msg">BullMQ Worker: Monitoring spatial indexes and auto-expiry schedules...</span>
+    </div>
+    <div style="font-size: 0.72rem; color: #94A3B8;">
+      PostGIS GIST Indexed • PostgreSQL 16
+    </div>
+  </div>
+
+  <!-- Leaflet Map JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Application Modules -->
+  <script type="module" src="/js/app.js"></script>
+
+</body>
+</html>
